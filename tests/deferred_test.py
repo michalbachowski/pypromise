@@ -124,6 +124,20 @@ class DeferredTestCase(unittest.TestCase):
 
         # verify
         self.mox.VerifyAll()
+    
+    def test_resolve_can_by_called_once(self):
+        # prepare
+        c = self.mox.CreateMockAnything()
+        c(1)
+        c(1)
+        c(1)
+        self.mox.ReplayAll()
+
+        # test
+        Deferred().done(c).resolve(1).done(c).resolve(2).done(c)
+
+        # verify
+        self.mox.VerifyAll()
 
     def test_done_after_resolvement_fires_callbacks_immediately(self):
         # prepare
@@ -230,6 +244,20 @@ class DeferredTestCase(unittest.TestCase):
 
         # test
         Deferred().fail(c).reject()
+
+        # verify
+        self.mox.VerifyAll()
+    
+    def test_reject_can_by_called_once(self):
+        # prepare
+        c = self.mox.CreateMockAnything()
+        c(1)
+        c(1)
+        c(1)
+        self.mox.ReplayAll()
+
+        # test
+        Deferred().fail(c).reject(1).fail(c).reject(2).fail(c)
 
         # verify
         self.mox.VerifyAll()
