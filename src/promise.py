@@ -3,6 +3,9 @@
 from functools import partial
 
 
+__all__ = ['Deferred', 'Promise', 'when']
+
+
 class CallbackList(object):
     """
     Simple list of callback that gets fired on demand.
