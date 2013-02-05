@@ -8,7 +8,8 @@ import unittest
 import _path
 _path.fix()
 
-TEST_MODULES = ['deferred_test', 'when_test', 'callback_list_test']
+TEST_MODULES = ['deferred_test', 'when_test', 'callback_list_test', \
+    'promise_test']
 
 
 def all():

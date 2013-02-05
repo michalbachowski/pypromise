@@ -154,6 +154,24 @@ class Deferred(object):
         """
         return self._doneCallbacks.cancelled and self._failCallbacks.cancelled
 
+class Promise(object):
+    """
+    Read-only deferred
+    """
+    
+    def __init__(self, deferred):
+        """
+        Object initialization
+        """
+        self.__deferred = deferred
+
+    def __getattr__(self, name):
+        """
+        Get attributes from base deferred. Filter out methods that change state
+        """
+        if name in ['resolve', 'reject', 'cancel']:
+            raise RuntimeError('Promise is read-only')
+        return getattr(self.__deferred, name)
 
 def when(*args):
     pass
