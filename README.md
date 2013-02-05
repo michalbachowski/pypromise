@@ -1,0 +1,4 @@
+PyPromise
+=========
+
+Python Promise implementation
