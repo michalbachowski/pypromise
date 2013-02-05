@@ -319,6 +319,15 @@ class DeferredTestCase(unittest.TestCase):
         self.assertFalse(Deferred().resolve().reject().cancelled)
         self.assertFalse(Deferred().reject().resolve().cancelled)
 
+    def test_init_allows_to_pass_one_argument_that_is_callable(self):
+        c = self.mox.CreateMockAnything()
+        c(deferred=mox.IsA(Deferred))
+        self.mox.ReplayAll()
+
+        Deferred(c)
+
+        self.mox.VerifyAll()
+
 
 if "__main__" == __name__:
     unittest.main()

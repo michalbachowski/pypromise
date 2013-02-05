@@ -77,7 +77,7 @@ class Deferred(object):
     Deferred object
     """
 
-    def __init__(self):
+    def __init__(self, func=None):
         """
         Object initialization
         """
@@ -86,6 +86,9 @@ class Deferred(object):
         # if either resolve or reject is called cancel both
         self.then(lambda *args: self._failCallbacks.cancel(), \
             lambda *args: self._doneCallbacks.cancel())
+        # if function was provided - call it
+        if func:
+            func(deferred=self)
 
     def then(self, success, error):
         """
