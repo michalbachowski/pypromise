@@ -75,11 +75,79 @@ class Deferred(object):
     Deferred object
     """
 
+    def __init__(self):
+        """
+        Object initialization
+        """
+        self._doneCallbacks = CallbackList()
+        self._failCallbacks = CallbackList()
+        # if either resolve or reject is called cancel both
+        self.then(lambda *args: self._failCallbacks.cancel(), \
+            lambda *args: self._doneCallbacks.cancel())
+
     def then(self, success, error):
         """
         Convenient wrapper for self.done() and self.fail() subsequent calls
         """
+        self.done(success).fail(error)
         return self
+
+    def done(self, *args):
+        """
+        Attaches given callback (or callbacks) to successful resolution
+        """
+        self._doneCallbacks.done(*args)
+        return self
+
+    def resolve(self, *args, **kwargs):
+        """
+        Resolves defferred positively
+        """
+        self._doneCallbacks.resolve(*args, **kwargs)
+        return self
+
+    @property
+    def resolved(self):
+        """
+        Returns resolution status
+        """
+        return self._doneCallbacks.resolved
+    
+    def fail(self, *args):
+        """
+        Attaches given callback (or callbacks) to rejected resolution
+        """
+        self._failCallbacks.done(*args)
+        return self
+
+    def reject(self, *args, **kwargs):
+        """
+        Resolves defferred negatively
+        """
+        self._failCallbacks.resolve(*args, **kwargs)
+        return self
+
+    @property
+    def rejected(self):
+        """
+        Returns resolution status
+        """
+        return self._failCallbacks.resolved
+
+    def cancel(self):
+        """
+        Cancels deferred
+        """
+        self._doneCallbacks.cancel()
+        self._failCallbacks.cancel()
+        return self
+
+    @property
+    def cancelled(self):
+        """
+        Checks whether deferred is cancelled
+        """
+        return self._doneCallbacks.cancelled and self._failCallbacks.cancelled
 
 
 def when(*args):
