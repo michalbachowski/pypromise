@@ -125,6 +125,18 @@ class CallbackListTestCase(unittest.TestCase):
         # verify
         self.mox.VerifyAll()
 
+    def test_object_can_be_resolved_once(self):
+        c = self.mox.CreateMockAnything()
+        c(1)
+        c(1)
+        self.mox.ReplayAll()
+
+        # test
+        CallbackList().done(c).resolve(1).resolve(2).done(c)
+
+        # verify
+        self.mox.VerifyAll()
+
     def test_resolved_returns_resolution_status_1(self):
         self.assertFalse(CallbackList().resolved)
     

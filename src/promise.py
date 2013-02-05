@@ -42,6 +42,8 @@ class CallbackList(object):
         """
         if self.cancelled:
             return self
+        if self.resolved:
+            return self
         self._resolved = True
         self._args = args
         self._kwargs = kwargs
