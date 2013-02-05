@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from functools import partial
 
 
 class CallbackList(object):
@@ -180,5 +181,25 @@ class Promise(object):
             raise RuntimeError('Promise is read-only')
         return getattr(self.__deferred, name)
 
+
+def _when(out, resp, key, *args, **kwargs):
+    """
+    Helper function for "when" method
+    """
+    resp[key] = (args, kwargs)
+    if None in resp:
+        return
+    out.resolve(*resp)
+
+
 def when(*args):
-    pass
+    """
+    Convinient way to call multiple deferreds.
+
+    Expects input to be on or more callable or Deferred objects
+    """
+    out = Deferred()
+    resp = [None] * len(args)
+    for (key, d) in enumerate(args):
+        d.then(partial(_when, out, resp, key), out.reject)
+    return out.promise()
