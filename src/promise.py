@@ -154,6 +154,13 @@ class Deferred(object):
         """
         return self._doneCallbacks.cancelled and self._failCallbacks.cancelled
 
+    def promise(self):
+        """
+        Returns Promise from given object
+        """
+        return Promise(self)
+
+
 class Promise(object):
     """
     Read-only deferred

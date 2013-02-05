@@ -14,7 +14,7 @@ _path.fix()
 ##
 # promise modules
 #
-from promise import Deferred
+from promise import Deferred, Promise
 
 
 class DeferredTestCase(unittest.TestCase):
@@ -355,6 +355,9 @@ class DeferredTestCase(unittest.TestCase):
         Deferred(c)
 
         self.mox.VerifyAll()
+
+    def test_promise_returns_instance_of_Promise_class(self):
+        self.assertIsInstance(Deferred().promise(), Promise)
 
 
 if "__main__" == __name__:
