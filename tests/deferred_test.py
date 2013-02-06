@@ -105,6 +105,15 @@ class DeferredTestCase(unittest.TestCase):
             err = True
         self.assertFalse(err)
 
+    def test_resolve_allows_to_pass_keyword_arguments(self):
+        err = False
+        try:
+            Deferred().resolve(foo=2)
+            Deferred().resolve(1, foo=2)
+        except TypeError:
+            err = True
+        self.assertFalse(err)
+
     def test_resolve_returns_self_so_chaining_is_possible(self):
         err = False
         try:
@@ -121,6 +130,18 @@ class DeferredTestCase(unittest.TestCase):
 
         # test
         Deferred().done(c).resolve()
+
+        # verify
+        self.mox.VerifyAll()
+
+    def test_resolve_passes_input_arguments_to_callbacks(self):
+        # prepare
+        c = self.mox.CreateMockAnything()
+        c(1, foo=2)
+        self.mox.ReplayAll()
+
+        # test
+        Deferred().resolve(1, foo=2).done(c)
 
         # verify
         self.mox.VerifyAll()
@@ -227,6 +248,15 @@ class DeferredTestCase(unittest.TestCase):
         except TypeError, e:
             err = True
         self.assertFalse(err)
+    
+    def test_reject_allows_to_pass_keyword_arguments(self):
+        err = False
+        try:
+            Deferred().fail(foo=2)
+            Deferred().fail(1, foo=2)
+        except TypeError:
+            err = True
+        self.assertFalse(err)
 
     def test_reject_returns_self_so_chaining_is_possible(self):
         err = False
@@ -244,6 +274,18 @@ class DeferredTestCase(unittest.TestCase):
 
         # test
         Deferred().fail(c).reject()
+
+        # verify
+        self.mox.VerifyAll()
+
+    def test_reject_passes_input_arguments_to_callbacks(self):
+        # prepare
+        c = self.mox.CreateMockAnything()
+        c(1, foo=2)
+        self.mox.ReplayAll()
+
+        # test
+        Deferred().reject(1, foo=2).fail(c)
 
         # verify
         self.mox.VerifyAll()
