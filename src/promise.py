@@ -191,14 +191,14 @@ class Promise(object):
         return getattr(self.__deferred, name)
 
 
-def _when(out, resp, key, *args, **kwargs):
+def _success(out, responses, key, *args, **kwargs):
     """
     Helper function for "when" method
     """
-    resp[key] = (args, kwargs)
-    if None in resp:
+    responses[key] = (args, kwargs)
+    if None in responses:
         return
-    out.resolve(*resp)
+    out.resolve(*responses)
 
 
 def when(*args):
@@ -208,7 +208,13 @@ def when(*args):
     Expects input to be on or more callable or Deferred objects
     """
     out = Deferred()
-    resp = [None] * len(args)
+    responses = [None] * len(args)
+
     for (key, d) in enumerate(args):
-        d.then(partial(_when, out, resp, key), out.reject)
+        # got Deferred instance? wait for resolution
+        try:
+            d.then(partial(_success, out, responses, key), out.reject)
+        except AttributeError:
+            # no Deferred instance? Resolve internal deferred
+            _success(out, responses, key, d)
     return out.promise()
