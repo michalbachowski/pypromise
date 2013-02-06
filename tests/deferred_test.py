@@ -356,6 +356,16 @@ class DeferredTestCase(unittest.TestCase):
 
         self.mox.VerifyAll()
 
+    def test_init_allows_to_pass_one_argument_that_is_not_callable(self):
+        c = self.mox.CreateMockAnything()
+        c(1)
+        self.mox.ReplayAll()
+
+        d = Deferred(1).done(c)
+        self.assertTrue(d.resolved)
+        self.mox.VerifyAll()
+
+
     def test_promise_returns_instance_of_Promise_class(self):
         self.assertIsInstance(Deferred().promise(), Promise)
 

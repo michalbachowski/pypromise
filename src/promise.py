@@ -90,9 +90,15 @@ class Deferred(object):
         # if either resolve or reject is called cancel both
         self.then(lambda *args: self._failCallbacks.cancel(), \
             lambda *args: self._doneCallbacks.cancel())
-        # if function was provided - call it
-        if func:
+        # if function was not provided - skip
+        if func is None:
+            return
+        # if function was provided - try to call it
+        try:
             func(deferred=self)
+        # not a function? resolve deferred with given input
+        except TypeError:
+            self.resolve(func)
 
     def then(self, success, error):
         """
