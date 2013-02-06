@@ -252,8 +252,8 @@ class DeferredTestCase(unittest.TestCase):
     def test_reject_allows_to_pass_keyword_arguments(self):
         err = False
         try:
-            Deferred().fail(foo=2)
-            Deferred().fail(1, foo=2)
+            Deferred().reject(foo=2)
+            Deferred().reject(1, foo=2)
         except TypeError:
             err = True
         self.assertFalse(err)

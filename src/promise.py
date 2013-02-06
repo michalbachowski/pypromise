@@ -88,8 +88,8 @@ class Deferred(object):
         self._doneCallbacks = CallbackList()
         self._failCallbacks = CallbackList()
         # if either resolve or reject is called cancel both
-        self.then(lambda *args: self._failCallbacks.cancel(), \
-            lambda *args: self._doneCallbacks.cancel())
+        self.then(lambda *args, **kwargs: self._failCallbacks.cancel(), \
+            lambda *args, **kwargs: self._doneCallbacks.cancel())
         # if function was not provided - skip
         if func is None:
             return
