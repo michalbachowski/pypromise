@@ -1,3 +1,11 @@
+# Test coverage configuration.
+# Usage:
+#   pip install coverage
+#   coverage erase                  # clears previous data if any
+#   coverage run ./runtest.py -f    # generates report
+#   coverage report  -m             # prints to stdout (-m => with missing lines)
+#   coverage html                   # creates ./htmlcov/*.html including annotated source
+
 [run]
 branch = True
 omit =
