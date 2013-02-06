@@ -73,6 +73,14 @@ class CallbackListTestCase(unittest.TestCase):
             err = True
         self.assertFalse(err)
 
+    def test_resolve_allows_to_pass_keyword_arguments(self):
+        err = False
+        try:
+            CallbackList().resolve(1, foo=2)
+        except TypeError:
+            err = True
+        self.assertFalse(err)
+
     def test_resolve_returns_self_so_chaining_is_possible(self):
         err = False
         try:
@@ -121,6 +129,18 @@ class CallbackListTestCase(unittest.TestCase):
 
         # test
         CallbackList().done(*pre).resolve().done(*post)
+
+        # verify
+        self.mox.VerifyAll()
+
+    def test_resolve_passes_input_arguments_to_callbacks(self):
+        # prepare
+        c = self.mox.CreateMockAnything()
+        c(1, foo=2)
+        self.mox.ReplayAll()
+
+        # test
+        CallbackList().resolve(1, foo=2).done(c)
 
         # verify
         self.mox.VerifyAll()
