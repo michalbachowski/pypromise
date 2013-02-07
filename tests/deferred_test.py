@@ -245,7 +245,7 @@ class DeferredTestCase(unittest.TestCase):
             Deferred().reject(1, 2)
             Deferred().reject(1, 2, 3)
             Deferred().reject(1, 2, 3, 4)
-        except TypeError, e:
+        except TypeError:
             err = True
         self.assertFalse(err)
     
