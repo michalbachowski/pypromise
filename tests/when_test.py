@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# hack for loading modules
+import _path
+_path.fix()
+
 ##
 # python standard library
 #
 import unittest
 import mox
 from functools import partial
-
-# hack for loading modules
-import _path
-_path.fix()
 
 ##
 # promise modules
@@ -38,7 +38,7 @@ class WhenTestCase(unittest.TestCase):
         self.assertFalse(err)
 
     def test_when_returns_instance_of_Promise(self):
-        self.assertIsInstance(when(), Promise)
+        self.assertTrue(isinstance(when(), Promise))
 
     def test_when_resolves_non_deferreds_immidiately(self):
         a = when(1)

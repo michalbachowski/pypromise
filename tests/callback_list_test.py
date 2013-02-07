@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# hack for loading modules
+import _path
+_path.fix()
+
 ##
 # python standard library
 #
 import unittest
 import mox
-
-# hack for loading modules
-import _path
-_path.fix()
 
 ##
 # promise modules
