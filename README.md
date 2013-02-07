@@ -1,7 +1,8 @@
 PyPromise
 =========
 
-PyPromise i open source (New BSD License)) Python Promise implementation. 
+PyPromise i open source (New BSD License) Python Promise implementation. [![Build Status](https://travis-ci.org/michalbachowski/pypromise.png?branch=master)](https://travis-ci.org/michalbachowski/pypromise)
+
 Simplifies working with asynchronous code and unifies way asynchronous and synchronous code is called.
 
 Manual installation
