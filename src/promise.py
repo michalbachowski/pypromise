@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+PyPromise
+
+Open source (New BSD License) Python Promise implementation.
+
+Author: Michał Bachowski
+"""
+
 from functools import partial
 
 
@@ -25,8 +33,8 @@ class CallbackList(object):
         """
         Fires given callbacks
         """
-        for c in callbacks:
-            c(*self._args, **self._kwargs)
+        for callback in callbacks:
+            callback(*self._args, **self._kwargs)
 
     def done(self, *args):
         """
@@ -59,7 +67,7 @@ class CallbackList(object):
         Terminates resolution
         """
         self._callbacks = None
-        return self;
+        return self
 
     @property
     def cancelled(self):
@@ -85,11 +93,11 @@ class Deferred(object):
         """
         Object initialization
         """
-        self._doneCallbacks = CallbackList()
-        self._failCallbacks = CallbackList()
+        self._done_callbacks = CallbackList()
+        self._fail_callbacks = CallbackList()
         # if either resolve or reject is called cancel both
-        self.then(lambda *args, **kwargs: self._failCallbacks.cancel(), \
-            lambda *args, **kwargs: self._doneCallbacks.cancel())
+        self.then(lambda *args, **kwargs: self._fail_callbacks.cancel(),
+                  lambda *args, **kwargs: self._done_callbacks.cancel())
         # if function was not provided - skip
         if func is None:
             return
@@ -111,14 +119,14 @@ class Deferred(object):
         """
         Attaches given callback (or callbacks) to successful resolution
         """
-        self._doneCallbacks.done(*args)
+        self._done_callbacks.done(*args)
         return self
 
     def resolve(self, *args, **kwargs):
         """
         Resolves defferred positively
         """
-        self._doneCallbacks.resolve(*args, **kwargs)
+        self._done_callbacks.resolve(*args, **kwargs)
         return self
 
     @property
@@ -126,20 +134,20 @@ class Deferred(object):
         """
         Returns resolution status
         """
-        return self._doneCallbacks.resolved
-    
+        return self._done_callbacks.resolved
+
     def fail(self, *args):
         """
         Attaches given callback (or callbacks) to rejected resolution
         """
-        self._failCallbacks.done(*args)
+        self._fail_callbacks.done(*args)
         return self
 
     def reject(self, *args, **kwargs):
         """
         Resolves defferred negatively
         """
-        self._failCallbacks.resolve(*args, **kwargs)
+        self._fail_callbacks.resolve(*args, **kwargs)
         return self
 
     @property
@@ -147,14 +155,14 @@ class Deferred(object):
         """
         Returns resolution status
         """
-        return self._failCallbacks.resolved
+        return self._fail_callbacks.resolved
 
     def cancel(self):
         """
         Cancels deferred
         """
-        self._doneCallbacks.cancel()
-        self._failCallbacks.cancel()
+        self._done_callbacks.cancel()
+        self._fail_callbacks.cancel()
         return self
 
     @property
@@ -162,7 +170,7 @@ class Deferred(object):
         """
         Checks whether deferred is cancelled
         """
-        return self._doneCallbacks.cancelled and self._failCallbacks.cancelled
+        return self._done_callbacks.cancelled and self._fail_callbacks.cancelled
 
     def promise(self):
         """
@@ -175,7 +183,7 @@ class Promise(object):
     """
     Read-only deferred
     """
-    
+
     def __init__(self, deferred):
         """
         Object initialization
@@ -191,6 +199,7 @@ class Promise(object):
         return getattr(self.__deferred, name)
 
 
+# pylint: disable-msg=R0903,W0142
 def _success(out, responses, key, *args, **kwargs):
     """
     Helper function for "when" method
@@ -210,11 +219,11 @@ def when(*args):
     out = Deferred()
     responses = [None] * len(args)
 
-    for (key, d) in enumerate(args):
+    for (key, deferred) in enumerate(args):
         # got Deferred instance? wait for resolution
         try:
-            d.then(partial(_success, out, responses, key), out.reject)
+            deferred.then(partial(_success, out, responses, key), out.reject)
         except AttributeError:
             # no Deferred instance? Resolve internal deferred
-            _success(out, responses, key, d)
+            _success(out, responses, key, deferred)
     return out.promise()
