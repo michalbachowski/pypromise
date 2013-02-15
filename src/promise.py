@@ -102,10 +102,10 @@ class Deferred(object):
         if func is None:
             return
         # if function was provided - try to call it
-        try:
+        if callable(func):
             func(deferred=self)
         # not a function? resolve deferred with given input
-        except TypeError:
+        else:
             self.resolve(func)
 
     def then(self, success, error):

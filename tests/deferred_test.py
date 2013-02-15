@@ -8,6 +8,7 @@ _path.fix()
 ##
 # python standard library
 #
+from functools import partial
 import unittest
 import mox
 
@@ -398,6 +399,16 @@ class DeferredTestCase(unittest.TestCase):
 
         self.mox.VerifyAll()
 
+    def test_init_raises_exceptions_raised_by_given_callable(self):
+        def c(a):
+            pass
+
+        def d(deferred):
+            raise RuntimeError()
+
+        self.assertRaises(TypeError, partial(Deferred, c))
+        self.assertRaises(RuntimeError, partial(Deferred, d))
+
     def test_init_allows_to_pass_one_argument_that_is_not_callable(self):
         c = self.mox.CreateMockAnything()
         c(1)
@@ -406,6 +417,9 @@ class DeferredTestCase(unittest.TestCase):
         d = Deferred(1).done(c)
         self.assertTrue(d.resolved)
         self.mox.VerifyAll()
+        self.assertFalse(Deferred(None).resolved)
+        self.assertTrue(Deferred('').resolved)
+        self.assertTrue(Deferred('a').resolved)
 
 
     def test_promise_returns_instance_of_Promise_class(self):
