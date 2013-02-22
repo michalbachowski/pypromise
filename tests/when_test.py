@@ -2,15 +2,18 @@
 # -*- coding: utf-8 -*-
 
 # hack for loading modules
-import _path
-_path.fix()
+from _path import fix, mock
+fix()
 
 ##
 # python standard library
 #
 import unittest
-import mox
 from functools import partial
+
+##
+# test helper
+from mock_helper import *
 
 ##
 # promise modules
@@ -21,10 +24,7 @@ from promise import when, Promise, Deferred
 class WhenTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.mox = mox.Mox()
-
-    def tearDown(self):
-        self.mox.UnsetStubs()
+        self.d = mock.Mock()
 
     def test_when_expects_any_number_of_input_arguments(self):
         err = False
@@ -47,11 +47,8 @@ class WhenTestCase(unittest.TestCase):
         self.assertFalse(a.cancelled)
     
     def test_when_registers_then_callbacks(self):
-        d = self.mox.CreateMock(Deferred)
-        d.then(mox.IsA(partial), mox.IsA(Deferred.reject))
-        self.mox.ReplayAll()
-        p = when(d)
-        self.mox.VerifyAll()
+        when(self.d)
+        self.d.then.assert_called_once_with(IsA(partial), IsCallable())
 
     def test_when_waits_for_all_deferreds_to_be_resolved(self):
         cb = {'ok': [None, None], 'err': [None, None]}
@@ -62,26 +59,20 @@ class WhenTestCase(unittest.TestCase):
         def _call(key, *args):
             cb['ok'][key](*args)
 
-        d1 = self.mox.CreateMock(Deferred)
-        d1.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 0))
-        d1.resolve(1).WithSideEffects(partial(_call, 0))
-
-        d2 = self.mox.CreateMock(Deferred)
-        d2.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 1))
-        d2.resolve(2).WithSideEffects(\
-            partial(_call, 1))
-
-        self.mox.ReplayAll()
+        self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
+        self.d.resolve = mock.MagicMock(side_effect=partial(_call, 0))
         
-        p = when(d1, d2)
+        d2 = mock.Mock()
+        d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
+        d2.resolve = mock.MagicMock(side_effect=partial(_call, 1))
+        
+        p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
-        d1.resolve(1)
-        
+        self.d.resolve(1)
+   
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
@@ -91,8 +82,6 @@ class WhenTestCase(unittest.TestCase):
         self.assertTrue(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
-        
-        self.mox.VerifyAll()
     
     def test_when_waits_for_one_deferreds_to_be_rejected_1(self):
         cb = {'ok': [None, None], 'err': [None, None]}
@@ -105,26 +94,20 @@ class WhenTestCase(unittest.TestCase):
 
         def _call2(key, *args):
             cb['err'][key](*args)
-
-        d1 = self.mox.CreateMock(Deferred)
-        d1.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 0))
-        d1.resolve(1).WithSideEffects(partial(_call, 0))
-
-        d2 = self.mox.CreateMock(Deferred)
-        d2.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 1))
-        d2.reject(2).WithSideEffects(\
-            partial(_call2, 1))
-
-        self.mox.ReplayAll()
         
-        p = when(d1, d2)
+        self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
+        self.d.resolve = mock.MagicMock(side_effect=partial(_call, 0))
+        
+        d2 = mock.Mock()
+        d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
+        d2.reject = mock.MagicMock(side_effect=partial(_call2, 1))
+
+        p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
-        d1.resolve(1)
+        self.d.resolve(1)
         
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
@@ -136,8 +119,6 @@ class WhenTestCase(unittest.TestCase):
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
         
-        self.mox.VerifyAll()
-    
     def test_when_waits_for_one_deferreds_to_be_rejected_2(self):
         cb = {'ok': [None, None], 'err': [None, None]}
         def _cb(key, ok, err):
@@ -150,26 +131,19 @@ class WhenTestCase(unittest.TestCase):
         def _call2(key, *args):
             cb['err'][key](*args)
 
-        d1 = self.mox.CreateMock(Deferred)
-        d1.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 0))
-        d1.reject(1).WithSideEffects(\
-            partial(_call2, 0))
-
-        d2 = self.mox.CreateMock(Deferred)
-        d2.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 1))
-        d2.resolve(2).WithSideEffects(\
-            partial(_call, 1))
-
-        self.mox.ReplayAll()
+        self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
+        self.d.reject = mock.MagicMock(side_effect=partial(_call2, 0))
         
-        p = when(d1, d2)
+        d2 = mock.Mock()
+        d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
+        d2.resolve = mock.MagicMock(side_effect=partial(_call, 1))
+        
+        p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
-        d1.reject(1)
+        self.d.reject(1)
         
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
@@ -181,8 +155,6 @@ class WhenTestCase(unittest.TestCase):
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
         
-        self.mox.VerifyAll()
-    
     def test_calls_done_callbacks_with_all_responses_ordered(self):
         cb = {'ok': [None, None], 'err': [None, None]}
         def _cb(key, ok, err):
@@ -192,28 +164,21 @@ class WhenTestCase(unittest.TestCase):
         def _call(key, *args, **kwargs):
             cb['ok'][key](*args, **kwargs)
 
-        d1 = self.mox.CreateMock(Deferred)
-        d1.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 0))
-        d1.resolve(1, foo=1).WithSideEffects(partial(_call, 0))
-
-        d2 = self.mox.CreateMock(Deferred)
-        d2.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 1))
-        d2.resolve(2).WithSideEffects(\
-            partial(_call, 1))
-
-        c = self.mox.CreateMockAnything()
-        c(((1, ), {'foo': 1}), ((2, ), {}))
-
-        self.mox.ReplayAll()
+        self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
+        self.d.resolve = mock.MagicMock(side_effect=partial(_call, 0))
         
-        p = when(d1, d2)
+        d2 = mock.Mock()
+        d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
+        d2.resolve = mock.MagicMock(side_effect=partial(_call, 1))
+        
+        c = mock.MagicMock()
+
+        p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
-        d1.resolve(1, foo=1)
+        self.d.resolve(1, foo=1)
         
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
@@ -226,8 +191,7 @@ class WhenTestCase(unittest.TestCase):
         self.assertFalse(p.cancelled)
 
         p.then(c, c)
-        
-        self.mox.VerifyAll()
+        c.assert_called_once_with(((1, ), {'foo': 1}), ((2, ), {}))
 
     def test_calls_fail_callbacks_once_with_only_one_failed_response_1(self):
         cb = {'ok': [None, None], 'err': [None, None]}
@@ -242,41 +206,34 @@ class WhenTestCase(unittest.TestCase):
         def _call2(key, *args, **kwargs):
             cb['err'][key](*args, **kwargs)
 
-        d1 = self.mox.CreateMock(Deferred)
-        d1.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 0))
-        d1.reject(1, foo=2).WithSideEffects(partial(_call2, 0))
+        self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
+        self.d.reject = mock.MagicMock(side_effect=partial(_call2, 0))
 
-        d2 = self.mox.CreateMock(Deferred)
-        d2.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 1))
-        d2.resolve(2).WithSideEffects(partial(_call, 1))
+        d2 = mock.Mock()
+        d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
+        d2.resolve = mock.MagicMock(side_effect=partial(_call, 1))
 
-        c = self.mox.CreateMockAnything()
-        c(1, foo=2)
-
-        self.mox.ReplayAll()
-        
-        p = when(d1, d2)
+        c = mock.MagicMock()
+ 
+        p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
-        d1.reject(1, foo=2)
+        self.d.reject(1, foo=2)
         
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
         
         d2.resolve(2)
-        
+
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
 
         p.then(c, c)
-        
-        self.mox.VerifyAll()
+        c.assert_called_once_with(1, foo=2)
 
     def test_calls_fail_callbacks_once_with_only_one_failed_response_2(self):
         cb = {'ok': [None, None], 'err': [None, None]}
@@ -291,28 +248,21 @@ class WhenTestCase(unittest.TestCase):
         def _call2(key, *args, **kwargs):
             cb['err'][key](*args, **kwargs)
 
-        d1 = self.mox.CreateMock(Deferred)
-        d1.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 0))
-        d1.reject(1, foo=2).WithSideEffects(partial(_call2, 0))
-
-        d2 = self.mox.CreateMock(Deferred)
-        d2.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 1))
-        d2.reject(2).WithSideEffects(\
-            partial(_call2, 1))
-
-        c = self.mox.CreateMockAnything()
-        c(1, foo=2)
-
-        self.mox.ReplayAll()
+        self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
+        self.d.reject = mock.MagicMock(side_effect=partial(_call2, 0))
         
-        p = when(d1, d2)
+        d2 = mock.Mock()
+        d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
+        d2.reject = mock.MagicMock(side_effect=partial(_call2, 1))
+        
+        c = mock.MagicMock()
+        
+        p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
-        d1.reject(1, foo=2)
+        self.d.reject(1, foo=2)
         
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
@@ -325,9 +275,9 @@ class WhenTestCase(unittest.TestCase):
         self.assertFalse(p.cancelled)
 
         p.then(c, c)
-        
-        self.mox.VerifyAll()
-    
+        c.assert_called_once_with(1, foo=2)
+
+ 
     def test_calls_fail_callbacks_once_with_only_one_failed_response_3(self):
         cb = {'ok': [None, None], 'err': [None, None]}
 
@@ -341,42 +291,35 @@ class WhenTestCase(unittest.TestCase):
         def _call2(key, *args, **kwargs):
             cb['err'][key](*args, **kwargs)
 
-        d1 = self.mox.CreateMock(Deferred)
-        d1.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 0))
-        d1.resolve(1, foo=2).WithSideEffects(partial(_call, 0))
-
-        d2 = self.mox.CreateMock(Deferred)
-        d2.then(mox.IsA(partial), mox.IsA(Deferred.reject)).WithSideEffects(\
-            partial(_cb, 1))
-        d2.reject(2, foo=3).WithSideEffects(\
-            partial(_call2, 1))
-
-        c = self.mox.CreateMockAnything()
-        c(2, foo=3)
-
-        self.mox.ReplayAll()
+        self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
+        self.d.resolve = mock.MagicMock(side_effect=partial(_call, 0))
         
-        p = when(d1, d2)
+        d2 = mock.Mock()
+        d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
+        d2.reject = mock.MagicMock(side_effect=partial(_call2, 1))
+        
+        c = mock.MagicMock()
+        
+        p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
-        d1.resolve(1, foo=2)
-        
+        self.d.resolve(1, foo=2)
+
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
-        
+
         d2.reject(2, foo=3)
-        
+
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
 
         p.then(c, c)
-        
-        self.mox.VerifyAll()
+
+        c.assert_called_once_with(2, foo=3)
 
 
 if "__main__" == __name__:
