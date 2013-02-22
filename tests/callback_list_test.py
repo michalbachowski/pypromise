@@ -2,14 +2,13 @@
 # -*- coding: utf-8 -*-
 
 # hack for loading modules
-import _path
-_path.fix()
+from _path import fix, mock
+fix()
 
 ##
 # python standard library
 #
 import unittest
-import mox
 
 ##
 # promise modules
@@ -20,10 +19,7 @@ from promise import CallbackList
 class CallbackListTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.mox = mox.Mox()
-
-    def tearDown(self):
-        self.mox.UnsetStubs()
+        self.c = mock.MagicMock()
 
     def test_done_expects_no_arguments(self):
         err = False
@@ -90,72 +86,33 @@ class CallbackListTestCase(unittest.TestCase):
         self.assertFalse(err)
 
     def test_resolve_fires_callbacks(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
-
-        # test
-        CallbackList().done(c).resolve()
-
-        # verify
-        self.mox.VerifyAll()
+        CallbackList().done(self.c).resolve()
+        self.c.assert_called_once_with()
 
     def test_done_after_resolvement_fires_callbacks_immediately(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
-
-        # test
-        CallbackList().resolve().done(c)
-
-        # verify
-        self.mox.VerifyAll()
+        CallbackList().resolve().done(self.c)
+        self.c.assert_called_once_with()
 
     def test_all_given_callbacks_are_called(self):
         # pre-resolve callbacks
-        pre = []
-        post = []
-        for i in xrange(0, 10):
-            t = self.mox.CreateMockAnything()
-            t()
-            pre.append(t)
-        for i in xrange(0, 10):
-            t = self.mox.CreateMockAnything()
-            t()
-            post.append(t)
-        self.mox.ReplayAll()
-
-        # test
+        pre = [mock.MagicMock() for i in range(0, 10)]
+        post = [mock.MagicMock() for i in range(0, 10)]
+        
         CallbackList().done(*pre).resolve().done(*post)
 
-        # verify
-        self.mox.VerifyAll()
+        for c in pre:
+            c.assert_called_once_with()
+        for c in post:
+            c.assert_called_once_with()
 
     def test_resolve_passes_input_arguments_to_callbacks(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c(1, foo=2)
-        self.mox.ReplayAll()
-
-        # test
-        CallbackList().resolve(1, foo=2).done(c)
-
-        # verify
-        self.mox.VerifyAll()
-
+        CallbackList().resolve(1, foo=2).done(self.c)
+        self.c.assert_called_once_with(1, foo=2)
+    
     def test_object_can_be_resolved_once(self):
-        c = self.mox.CreateMockAnything()
-        c(1)
-        c(1)
-        self.mox.ReplayAll()
-
-        # test
-        CallbackList().done(c).resolve(1).resolve(2).done(c)
-
-        # verify
-        self.mox.VerifyAll()
+        expected = [mock.call(1), mock.call(1)]
+        CallbackList().done(self.c).resolve(1).resolve(2).done(self.c)
+        self.assertEqual(self.c.call_args_list, expected)
 
     def test_resolved_returns_resolution_status_1(self):
         self.assertFalse(CallbackList().resolved)
@@ -167,15 +124,10 @@ class CallbackListTestCase(unittest.TestCase):
         self.assertTrue(CallbackList().resolve().resolved)
 
     def test_cancel_terminates_resolution(self):
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
-
-        CallbackList().done(c).cancel().resolve()
-        CallbackList().cancel().done(c).resolve()
-        CallbackList().resolve().cancel().done(c)
-
-        self.assertRaises(mox.ExpectedMethodCallsError, self.mox.VerifyAll)
+        CallbackList().done(self.c).cancel().resolve()
+        CallbackList().cancel().done(self.c).resolve()
+        CallbackList().resolve().cancel().done(self.c)
+        self.assertEqual(self.c.call_count, 0)
 
     def test_cancelled_returns_cancellation_status_1(self):
         self.assertFalse(CallbackList().cancelled)
