@@ -6,6 +6,6 @@ python:
 #  - "3.2" # PyMox mocking library is incompatibile with Python 3 so tests will fail
 
 install:
-    - pip install --use-mirrors mox
+    - pip install --use-mirrors mox mock
 
 script: tests/runtest.py

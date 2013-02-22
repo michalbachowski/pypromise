@@ -4,6 +4,12 @@ import os
 import sys
 
 
+try:
+    from unittest import mock
+except ImportError:
+    import mock
+
+
 def fix():
     p = os.path.join(os.path.dirname(__file__), '../src/')
     if p not in sys.path:
