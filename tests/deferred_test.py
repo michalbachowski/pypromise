@@ -10,7 +10,6 @@ fix()
 #
 from functools import partial
 import unittest
-import mox
 
 ##
 # promise modules
@@ -21,26 +20,13 @@ from promise import Deferred, Promise
 class DeferredTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.mox = mox.Mox()
-
-    def tearDown(self):
-        self.mox.UnsetStubs()
+        self.c = mock.MagicMock()
 
     def test_then_expects_2_arguments_1(self):
-        err = False
-        try:
-            Deferred().then()
-        except TypeError:
-            err = True
-        self.assertTrue(err)
+        self.assertRaises(TypeError, Deferred().then)
 
     def test_then_expects_2_arguments_2(self):
-        err = False
-        try:
-            Deferred().then(None)
-        except TypeError:
-            err = True
-        self.assertTrue(err)
+        self.assertRaises(TypeError, partial(Deferred().then, None))
 
     def test_then_expects_2_arguments_3(self):
         err = False
@@ -124,74 +110,34 @@ class DeferredTestCase(unittest.TestCase):
         self.assertFalse(err)
 
     def test_resolve_fires_callbacks(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
-
-        # test
-        Deferred().done(c).resolve()
-
-        # verify
-        self.mox.VerifyAll()
+        Deferred().done(self.c).resolve()
+        self.c.assert_called_once_with()
 
     def test_resolve_passes_input_arguments_to_callbacks(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c(1, foo=2)
-        self.mox.ReplayAll()
-
-        # test
-        Deferred().resolve(1, foo=2).done(c)
-
-        # verify
-        self.mox.VerifyAll()
+        Deferred().resolve(1, foo=2).done(self.c)
+        self.c.assert_called_once_with(1, foo=2)
     
     def test_resolve_can_by_called_once(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c(1)
-        c(1)
-        c(1)
-        self.mox.ReplayAll()
-
-        # test
-        Deferred().done(c).resolve(1).done(c).resolve(2).done(c)
-
-        # verify
-        self.mox.VerifyAll()
+        expected = [mock.call(1), mock.call(1), mock.call(1)]
+        
+        Deferred().done(self.c).resolve(1).done(self.c).resolve(2).done(self.c)
+        
+        self.assertEqual(self.c.call_args_list, expected)
 
     def test_done_after_resolvement_fires_callbacks_immediately(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
+        Deferred().resolve().done(self.c)
+        self.c.assert_called_once_with()
+    
 
-        # test
-        Deferred().resolve().done(c)
-
-        # verify
-        self.mox.VerifyAll()
-
-    def test_all_given_callbacks_are_called(self):
-        # pre-resolve callbacks
-        pre = []
-        post = []
-        for i in xrange(0, 10):
-            t = self.mox.CreateMockAnything()
-            t()
-            pre.append(t)
-        for i in xrange(0, 10):
-            t = self.mox.CreateMockAnything()
-            t()
-            post.append(t)
-        self.mox.ReplayAll()
-
-        # test
+    def test_resolve_all_given_callbacks_are_called(self):
+        pre = [mock.MagicMock() for i in range(0, 10)]
+        post = [mock.MagicMock() for i in range(0, 10)]
         Deferred().done(*pre).resolve().done(*post)
 
-        # verify
-        self.mox.VerifyAll()
+        for c in pre:
+            c.assert_called_once_with()
+        for c in post:
+            c.assert_called_once_with()
 
     def test_resolved_returns_resolution_status_1(self):
         self.assertFalse(Deferred().resolved)
@@ -268,74 +214,33 @@ class DeferredTestCase(unittest.TestCase):
         self.assertFalse(err)
 
     def test_reject_fires_callbacks(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
-
-        # test
-        Deferred().fail(c).reject()
-
-        # verify
-        self.mox.VerifyAll()
+        Deferred().fail(self.c).reject()
+        self.c.assert_called_once_with()
 
     def test_reject_passes_input_arguments_to_callbacks(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c(1, foo=2)
-        self.mox.ReplayAll()
-
-        # test
-        Deferred().reject(1, foo=2).fail(c)
-
-        # verify
-        self.mox.VerifyAll()
+        Deferred().reject(1, foo=2).fail(self.c)
+        self.c.assert_called_once_with(1, foo=2)
     
     def test_reject_can_by_called_once(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c(1)
-        c(1)
-        c(1)
-        self.mox.ReplayAll()
-
-        # test
-        Deferred().fail(c).reject(1).fail(c).reject(2).fail(c)
-
-        # verify
-        self.mox.VerifyAll()
+        expected = [mock.call(1), mock.call(1), mock.call(1)]
+        Deferred().fail(self.c).reject(1).fail(self.c).reject(2).fail(self.c)
+        self.assertEqual(self.c.call_args_list, expected)
 
     def test_fail_after_rejectment_fires_callbacks_immediately(self):
-        # prepare
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
+        Deferred().reject().fail(self.c)
+        self.c.assert_called_once_with()
 
-        # test
-        Deferred().reject().fail(c)
-
-        # verify
-        self.mox.VerifyAll()
-
-    def test_all_given_callbacks_are_called(self):
+    def test_reject_all_given_callbacks_are_called(self):
         # pre-reject callbacks
-        pre = []
-        post = []
-        for i in xrange(0, 10):
-            t = self.mox.CreateMockAnything()
-            t()
-            pre.append(t)
-        for i in xrange(0, 10):
-            t = self.mox.CreateMockAnything()
-            t()
-            post.append(t)
-        self.mox.ReplayAll()
-
-        # test
+        pre = [mock.MagicMock() for i in range(0, 10)]
+        post = [mock.MagicMock() for i in range(0, 10)]
+        
         Deferred().fail(*pre).reject().fail(*post)
 
-        # verify
-        self.mox.VerifyAll()
+        for c in pre:
+            c.assert_called_once_with()
+        for c in post:
+            c.assert_called_once_with()
 
     def test_rejected_returns_resolution_status_1(self):
         self.assertFalse(Deferred().rejected)
@@ -347,33 +252,20 @@ class DeferredTestCase(unittest.TestCase):
         self.assertTrue(Deferred().reject().rejected)
 
     def test_after_success_fail_callbacks_can_not_be_triggerred(self):
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
-
-        Deferred().fail(c).resolve().reject()
-
-        self.assertRaises(mox.ExpectedMethodCallsError, self.mox.VerifyAll)
+        Deferred().fail(self.c).resolve().reject()
+        self.assertEqual(self.c.call_count, 0)
 
     def test_after_fail_done_callbacks_can_not_be_triggerred(self):
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
-
-        Deferred().done(c).reject().resolve()
-
-        self.assertRaises(mox.ExpectedMethodCallsError, self.mox.VerifyAll)
+        Deferred().done(self.c).reject().resolve()
+        self.assertEqual(self.c.call_count, 0)
 
     def test_cancel_terminates_deferred(self):
-        c = self.mox.CreateMockAnything()
-        c()
-        self.mox.ReplayAll()
 
-        Deferred().done(c).fail(c).cancel().reject()
-        Deferred().done(c).fail(c).cancel().resolve()
-
-        self.assertRaises(mox.ExpectedMethodCallsError, self.mox.VerifyAll)
-    
+        Deferred().done(self.c).fail(self.c).cancel().reject()
+        Deferred().done(self.c).fail(self.c).cancel().resolve()
+        
+        self.assertEqual(self.c.call_count, 0)
+ 
     def test_cancelled_tells_whether_deferred_was_cancelled_1(self):
         self.assertFalse(Deferred().cancelled)
 
@@ -391,13 +283,8 @@ class DeferredTestCase(unittest.TestCase):
         self.assertFalse(Deferred().reject().resolve().cancelled)
 
     def test_init_allows_to_pass_one_argument_that_is_callable(self):
-        c = self.mox.CreateMockAnything()
-        c(deferred=mox.IsA(Deferred))
-        self.mox.ReplayAll()
-
-        Deferred(c)
-
-        self.mox.VerifyAll()
+        Deferred(self.c)
+        self.c.assert_called_once_with(deferred=mock.ANY)
 
     def test_init_raises_exceptions_raised_by_given_callable(self):
         def c(a):
@@ -410,17 +297,13 @@ class DeferredTestCase(unittest.TestCase):
         self.assertRaises(RuntimeError, partial(Deferred, d))
 
     def test_init_allows_to_pass_one_argument_that_is_not_callable(self):
-        c = self.mox.CreateMockAnything()
-        c(1)
-        self.mox.ReplayAll()
-
-        d = Deferred(1).done(c)
+        
+        d = Deferred(1).done(self.c)
         self.assertTrue(d.resolved)
-        self.mox.VerifyAll()
+        self.c.assert_called_once_with(1)
         self.assertFalse(Deferred(None).resolved)
         self.assertTrue(Deferred('').resolved)
         self.assertTrue(Deferred('a').resolved)
-
 
     def test_promise_returns_instance_of_Promise_class(self):
         self.assertTrue(isinstance(Deferred().promise(), Promise))
