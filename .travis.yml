@@ -8,4 +8,4 @@ python:
 install:
     - pip install --use-mirrors mock
 
-script: tests/runtest.py
+script: /usr/bin/env make test
