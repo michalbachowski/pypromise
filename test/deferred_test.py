@@ -43,7 +43,7 @@ class DeferredTestCase(unittest.TestCase):
         except AttributeError:
             err = True
         self.assertFalse(err)
-    
+
     def test_done_expects_no_arguments(self):
         err = False
         try:
@@ -116,18 +116,18 @@ class DeferredTestCase(unittest.TestCase):
     def test_resolve_passes_input_arguments_to_callbacks(self):
         Deferred().resolve(1, foo=2).done(self.c)
         self.c.assert_called_once_with(1, foo=2)
-    
+
     def test_resolve_can_by_called_once(self):
         expected = [mock.call(1), mock.call(1), mock.call(1)]
-        
+
         Deferred().done(self.c).resolve(1).done(self.c).resolve(2).done(self.c)
-        
+
         self.assertEqual(self.c.call_args_list, expected)
 
     def test_done_after_resolvement_fires_callbacks_immediately(self):
         Deferred().resolve().done(self.c)
         self.c.assert_called_once_with()
-    
+
 
     def test_resolve_all_given_callbacks_are_called(self):
         pre = [mock.MagicMock() for i in range(0, 10)]
@@ -141,13 +141,13 @@ class DeferredTestCase(unittest.TestCase):
 
     def test_resolved_returns_resolution_status_1(self):
         self.assertFalse(Deferred().resolved)
-    
+
     def test_resolved_returns_resolution_status_2(self):
         self.assertFalse(Deferred().done().resolved)
-    
+
     def test_resolved_returns_resolution_status_3(self):
         self.assertTrue(Deferred().resolve().resolved)
-    
+
     def test_fail_expects_no_arguments(self):
         err = False
         try:
@@ -195,7 +195,7 @@ class DeferredTestCase(unittest.TestCase):
         except TypeError:
             err = True
         self.assertFalse(err)
-    
+
     def test_reject_allows_to_pass_keyword_arguments(self):
         err = False
         try:
@@ -220,7 +220,7 @@ class DeferredTestCase(unittest.TestCase):
     def test_reject_passes_input_arguments_to_callbacks(self):
         Deferred().reject(1, foo=2).fail(self.c)
         self.c.assert_called_once_with(1, foo=2)
-    
+
     def test_reject_can_by_called_once(self):
         expected = [mock.call(1), mock.call(1), mock.call(1)]
         Deferred().fail(self.c).reject(1).fail(self.c).reject(2).fail(self.c)
@@ -234,7 +234,7 @@ class DeferredTestCase(unittest.TestCase):
         # pre-reject callbacks
         pre = [mock.MagicMock() for i in range(0, 10)]
         post = [mock.MagicMock() for i in range(0, 10)]
-        
+
         Deferred().fail(*pre).reject().fail(*post)
 
         for c in pre:
@@ -244,10 +244,10 @@ class DeferredTestCase(unittest.TestCase):
 
     def test_rejected_returns_resolution_status_1(self):
         self.assertFalse(Deferred().rejected)
-    
+
     def test_rejected_returns_resolution_status_2(self):
         self.assertFalse(Deferred().fail().rejected)
-    
+
     def test_rejected_returns_resolution_status_3(self):
         self.assertTrue(Deferred().reject().rejected)
 
@@ -263,9 +263,9 @@ class DeferredTestCase(unittest.TestCase):
 
         Deferred().done(self.c).fail(self.c).cancel().reject()
         Deferred().done(self.c).fail(self.c).cancel().resolve()
-        
+
         self.assertEqual(self.c.call_count, 0)
- 
+
     def test_cancelled_tells_whether_deferred_was_cancelled_1(self):
         self.assertFalse(Deferred().cancelled)
 
@@ -286,6 +286,13 @@ class DeferredTestCase(unittest.TestCase):
         Deferred(self.c)
         self.c.assert_called_once_with(deferred=mock.ANY)
 
+    def test_init_allows_to_pass_additional_arguments_for_callable(self):
+        Deferred(self.c, 1, a= 2)
+        self.c.assert_called_once_with(1, deferred=mock.ANY, a=2)
+
+    def test_init_raises_exception_when_deferred_keyword_argument_is_passed(self):
+        self.assertRaises(TypeError, partial(Deferred, self.c, deferred='foo'))
+
     def test_init_raises_exceptions_raised_by_given_callable(self):
         def c(a):
             pass
@@ -297,7 +304,7 @@ class DeferredTestCase(unittest.TestCase):
         self.assertRaises(RuntimeError, partial(Deferred, d))
 
     def test_init_allows_to_pass_one_argument_that_is_not_callable(self):
-        
+
         d = Deferred(1).done(self.c)
         self.assertTrue(d.resolved)
         self.c.assert_called_once_with(1)

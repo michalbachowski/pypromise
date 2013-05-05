@@ -89,7 +89,7 @@ class Deferred(object):
     Deferred object
     """
 
-    def __init__(self, func=None):
+    def __init__(self, func=None, *args, **kwargs):
         """
         Object initialization
         """
@@ -103,7 +103,7 @@ class Deferred(object):
             return
         # if function was provided - try to call it
         if callable(func):
-            func(deferred=self)
+            func(deferred=self, *args, **kwargs)
         # not a function? resolve deferred with given input
         else:
             self.resolve(func)
