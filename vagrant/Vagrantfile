@@ -5,7 +5,7 @@ Vagrant.configure("2") do |config|
   
   config.vm.box_url = "http://files.vagrantup.com/precise32.box"
 
-  config.vm.hostname = "zazu"
+  config.vm.hostname = "pypromise"
 
   config.berkshelf.enabled = true
   # Create a forwarded port mapping which allows access to a specific port
