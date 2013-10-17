@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# hack for loading modules
-from _path import fix, mock
-fix()
-
 ##
 # python standard library
 #
 from functools import partial
 import unittest
+
+##
+# test helpers
+#
+from testutils import mock
 
 ##
 # promise modules

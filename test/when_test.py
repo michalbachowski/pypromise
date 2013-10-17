@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# hack for loading modules
-from _path import fix, mock
-fix()
-
 ##
 # python standard library
 #
@@ -12,13 +8,14 @@ import unittest
 from functools import partial
 
 ##
-# test helper
-from mock_helper import *
+# test helpers
+#
+from testutils import mock, IsA, IsCallable
 
 ##
 # promise modules
 #
-from promise import when, Promise, Deferred
+from promise import when, Promise
 
 
 class WhenTestCase(unittest.TestCase):
@@ -45,7 +42,7 @@ class WhenTestCase(unittest.TestCase):
         self.assertTrue(a.resolved)
         self.assertFalse(a.rejected)
         self.assertFalse(a.cancelled)
-    
+
     def test_when_registers_then_callbacks(self):
         when(self.d)
         self.d.then.assert_called_once_with(IsA(partial), IsCallable())
@@ -61,28 +58,28 @@ class WhenTestCase(unittest.TestCase):
 
         self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
         self.d.resolve = mock.MagicMock(side_effect=partial(_call, 0))
-        
+
         d2 = mock.Mock()
         d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
         d2.resolve = mock.MagicMock(side_effect=partial(_call, 1))
-        
+
         p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
         self.d.resolve(1)
-   
+
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
-        
+
         d2.resolve(2)
-        
+
         self.assertTrue(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
-    
+
     def test_when_waits_for_one_deferreds_to_be_rejected_1(self):
         cb = {'ok': [None, None], 'err': [None, None]}
         def _cb(key, ok, err):
@@ -94,10 +91,10 @@ class WhenTestCase(unittest.TestCase):
 
         def _call2(key, *args):
             cb['err'][key](*args)
-        
+
         self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
         self.d.resolve = mock.MagicMock(side_effect=partial(_call, 0))
-        
+
         d2 = mock.Mock()
         d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
         d2.reject = mock.MagicMock(side_effect=partial(_call2, 1))
@@ -108,17 +105,17 @@ class WhenTestCase(unittest.TestCase):
         self.assertFalse(p.cancelled)
 
         self.d.resolve(1)
-        
+
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
-        
+
         d2.reject(2)
-        
+
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
-        
+
     def test_when_waits_for_one_deferreds_to_be_rejected_2(self):
         cb = {'ok': [None, None], 'err': [None, None]}
         def _cb(key, ok, err):
@@ -133,28 +130,28 @@ class WhenTestCase(unittest.TestCase):
 
         self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
         self.d.reject = mock.MagicMock(side_effect=partial(_call2, 0))
-        
+
         d2 = mock.Mock()
         d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
         d2.resolve = mock.MagicMock(side_effect=partial(_call, 1))
-        
+
         p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
         self.d.reject(1)
-        
+
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
-        
+
         d2.resolve(2)
-        
+
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
-        
+
     def test_calls_done_callbacks_with_all_responses_ordered(self):
         cb = {'ok': [None, None], 'err': [None, None]}
         def _cb(key, ok, err):
@@ -166,11 +163,11 @@ class WhenTestCase(unittest.TestCase):
 
         self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
         self.d.resolve = mock.MagicMock(side_effect=partial(_call, 0))
-        
+
         d2 = mock.Mock()
         d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
         d2.resolve = mock.MagicMock(side_effect=partial(_call, 1))
-        
+
         c = mock.MagicMock()
 
         p = when(self.d, d2)
@@ -179,13 +176,13 @@ class WhenTestCase(unittest.TestCase):
         self.assertFalse(p.cancelled)
 
         self.d.resolve(1, foo=1)
-        
+
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
-        
+
         d2.resolve(2)
-        
+
         self.assertTrue(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
@@ -214,18 +211,18 @@ class WhenTestCase(unittest.TestCase):
         d2.resolve = mock.MagicMock(side_effect=partial(_call, 1))
 
         c = mock.MagicMock()
- 
+
         p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
         self.d.reject(1, foo=2)
-        
+
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
-        
+
         d2.resolve(2)
 
         self.assertFalse(p.resolved)
@@ -250,26 +247,26 @@ class WhenTestCase(unittest.TestCase):
 
         self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
         self.d.reject = mock.MagicMock(side_effect=partial(_call2, 0))
-        
+
         d2 = mock.Mock()
         d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
         d2.reject = mock.MagicMock(side_effect=partial(_call2, 1))
-        
+
         c = mock.MagicMock()
-        
+
         p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)
         self.assertFalse(p.cancelled)
 
         self.d.reject(1, foo=2)
-        
+
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
-        
+
         d2.reject(2)
-        
+
         self.assertFalse(p.resolved)
         self.assertTrue(p.rejected)
         self.assertFalse(p.cancelled)
@@ -277,7 +274,7 @@ class WhenTestCase(unittest.TestCase):
         p.then(c, c)
         c.assert_called_once_with(1, foo=2)
 
- 
+
     def test_calls_fail_callbacks_once_with_only_one_failed_response_3(self):
         cb = {'ok': [None, None], 'err': [None, None]}
 
@@ -293,13 +290,13 @@ class WhenTestCase(unittest.TestCase):
 
         self.d.then = mock.MagicMock(side_effect=partial(_cb, 0))
         self.d.resolve = mock.MagicMock(side_effect=partial(_call, 0))
-        
+
         d2 = mock.Mock()
         d2.then = mock.MagicMock(side_effect=partial(_cb, 1))
         d2.reject = mock.MagicMock(side_effect=partial(_call2, 1))
-        
+
         c = mock.MagicMock()
-        
+
         p = when(self.d, d2)
         self.assertFalse(p.resolved)
         self.assertFalse(p.rejected)

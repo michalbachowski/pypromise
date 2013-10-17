@@ -5,7 +5,27 @@ python:
   - "2.7"
   - "3.2"
 
-install:
-    - pip install --use-mirrors mock
+env:
+    - TOX_ENV=py26
+    - TOX_ENV=py27
+    - TOX_ENV=py32
 
-script: /usr/bin/env make test
+matrix:
+  exclude:
+    - python: "2.6"
+      env: TOX_ENV=py27 
+    - python: "2.6"
+      env: TOX_ENV=py32 
+    - python: "2.7"
+      env: TOX_ENV=py26 
+    - python: "2.7"
+      env: TOX_ENV=py32 
+    - python: "3.2"
+      env: TOX_ENV=py26
+    - python: "3.2"
+      env: TOX_ENV=py27 
+
+install:
+    - pip install tox
+
+script: tox -e $TOX_ENV

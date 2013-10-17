@@ -1,4 +1,9 @@
-test:
-	test/runtest.py
+subdir="test"
 
-.PHONY: test
+test:
+	make -C $(subdir) test
+
+coverage:
+	make -C $(subdir) coverage
+
+.PHONY: test coverage

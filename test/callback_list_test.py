@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# hack for loading modules
-from _path import fix, mock
-fix()
-
 ##
 # python standard library
 #
 import unittest
+
+##
+# test helpers
+#
+from testutils import mock
 
 ##
 # promise modules
@@ -97,7 +98,7 @@ class CallbackListTestCase(unittest.TestCase):
         # pre-resolve callbacks
         pre = [mock.MagicMock() for i in range(0, 10)]
         post = [mock.MagicMock() for i in range(0, 10)]
-        
+
         CallbackList().done(*pre).resolve().done(*post)
 
         for c in pre:
@@ -108,7 +109,7 @@ class CallbackListTestCase(unittest.TestCase):
     def test_resolve_passes_input_arguments_to_callbacks(self):
         CallbackList().resolve(1, foo=2).done(self.c)
         self.c.assert_called_once_with(1, foo=2)
-    
+
     def test_object_can_be_resolved_once(self):
         expected = [mock.call(1), mock.call(1)]
         CallbackList().done(self.c).resolve(1).resolve(2).done(self.c)
@@ -116,10 +117,10 @@ class CallbackListTestCase(unittest.TestCase):
 
     def test_resolved_returns_resolution_status_1(self):
         self.assertFalse(CallbackList().resolved)
-    
+
     def test_resolved_returns_resolution_status_2(self):
         self.assertFalse(CallbackList().done().resolved)
-    
+
     def test_resolved_returns_resolution_status_3(self):
         self.assertTrue(CallbackList().resolve().resolved)
 
@@ -131,10 +132,10 @@ class CallbackListTestCase(unittest.TestCase):
 
     def test_cancelled_returns_cancellation_status_1(self):
         self.assertFalse(CallbackList().cancelled)
-    
+
     def test_cancelled_returns_cancellation_status_2(self):
         self.assertTrue(CallbackList().cancel().cancelled)
-    
+
     def test_cancelled_returns_cancellation_status_3(self):
         self.assertTrue(CallbackList().cancel().resolve().cancelled)
 

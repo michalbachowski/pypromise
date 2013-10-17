@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 from distutils.core import setup
+
 
 # monkey patch os.link to force using symlinks
 import os
