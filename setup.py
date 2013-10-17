@@ -8,7 +8,7 @@ import os
 del os.link
 
 setup(name='PyPromise',\
-    version='1.1.1',\
+    version='1.1.2',\
     description='Python Promise implementation',\
     license='New BSD License',\
     author='Michał Bachowski',\
