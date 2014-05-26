@@ -31,6 +31,8 @@ Vagrant.configure("2") do |config|
   # argument is a set of non-required options.
   config.vm.synced_folder "../", "/home/vagrant/app"
 
+  config.omnibus.chef_version = :latest
+
   # uncomment if you want to sync your local SSH keys
   # WARNING: add "insecure_key.pub" to your authorized keys first!
   # config.vm.synced_folder "~/.ssh", "/home/vagrant/.ssh"
